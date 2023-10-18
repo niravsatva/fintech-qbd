@@ -32,9 +32,6 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.serverVersion = function (
   args: any,
   callback: any
 ) {
-  console.log("args: ", args);
-  console.log("callback: ", callback);
-
   const retVal: string = "0.2.0";
   console.log("1 from web-service serverVersion: ");
 
@@ -98,9 +95,7 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.authenticate =
           if (err || requestQueue.length === 0) {
             authReturn[1] = "NONE";
           } else {
-            console.log("first");
             authReturn[1] = companyFile;
-            console.log("companyFile: ", companyFile);
           }
 
           callback({
@@ -214,7 +209,6 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.connectionError = function (
   callback: any
 ) {
   console.log("6 from web-service connectionError: ");
-  console.log("args: ", args);
 
   console.log(
     "QB CONNECTION ERROR: " + args.message + " (" + args.hresult + ")"
