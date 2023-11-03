@@ -5,14 +5,15 @@ build:
     build:
       - npm i
       - npm i ts-node-dev --save-dev
+      - npm install -D tslib @types/node
       - npm run build
       - npx prisma generate
 run:
-  command: npm start
+  command: ts-node QBDbin/run.ts
   network:
-    port: 8082
+    port: 8000
   env:
     - name: DATABASE_URL
       value: postgresql://postgres:Satva1213@sage-intacct.ci6m9hlbprkn.us-east-1.rds.amazonaws.com:5432/reusable-app?schema=public
     - name: QB_SOAP_PORT
-      value: 8082
+      value: 8000
