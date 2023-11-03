@@ -1,11 +1,14 @@
 {
-  "name": "pocforqbd",
+  "name": "QuickbookDesktop",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
+
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node-dev QBDbin/run.ts"
+    "start": "ts-node-dev dist/QBDbin/run.ts",
+		"start:dev": "ts-node-dev /QBDbin/run.ts"
   },
   "keywords": [],
   "author": "",

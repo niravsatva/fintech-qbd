@@ -1,0 +1,17 @@
+version: 1.0
+runtime: nodejs16
+build:
+  commands:
+    build:
+      - npm i
+      - npm run build
+      - npx prisma generate
+run:
+  command: dist/QBDbin/run.ts
+  network:
+    port: 8082
+  env:
+    - name: DATABASE_URL
+      value: postgresql://postgres:Satva1213@sage-intacct.ci6m9hlbprkn.us-east-1.rds.amazonaws.com:5432/reusable-app?schema=public
+    - name: QB_SOAP_PORT
+      value: 8082
