@@ -9,7 +9,7 @@ build:
       - npm run build
       - npx prisma generate
 run:
-  command: ts-node QBDbin/run.ts
+  command: ts-node dist/QBDbin/run.js
   network:
     port: 8000
   env:

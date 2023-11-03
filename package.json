@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node QBDbin/run.ts",
+    "start": "ts-node dist/QBDbin/run.js",
     "start:dev": "ts-node QBDbin/run.ts"
   },
   "keywords": [],

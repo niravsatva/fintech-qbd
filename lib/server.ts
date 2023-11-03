@@ -1,11 +1,12 @@
 import http from 'http';
 import fs from 'fs';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const soap = require('soap');
 
 // Define constants
 const port = process.env.QB_SOAP_PORT || 8000;
-const WSDL_FILENAME = '/qbws.wsdl';
-
+const WSDL_FILEPATH ='./lib/'
+const WSDL_FILENAME = 'qbws.wsdl';
 class Server {
     wsdl: any;
     webService: any;
@@ -18,7 +19,7 @@ class Server {
     buildWsdl() {
         try {
             // Read the WSDL file from the file system
-            return fs.readFileSync(__dirname + WSDL_FILENAME, 'utf8');
+            return fs.readFileSync(WSDL_FILEPATH + WSDL_FILENAME, 'utf8');
         } catch (error) {
             console.error('Error reading WSDL file:', error);
             return null;
