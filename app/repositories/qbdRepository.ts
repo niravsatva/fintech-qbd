@@ -40,7 +40,7 @@ class QbdRepository {
 
   async updateActiveConnection(username:any) {
     try {
-      const data = await prisma.connections.updateMany({
+       await prisma.connections.updateMany({
         where: {
           tokenDetails: {
             contains:username
@@ -59,7 +59,7 @@ class QbdRepository {
   
   async updateCompanyName(username:any,companyName:any) {
     try {
-      const data = await prisma.connections.updateMany({
+       await prisma.connections.updateMany({
         where: {
           tokenDetails: {
             contains:username
