@@ -4,10 +4,11 @@ build:
   commands:
     build:
       - npm i
+      - npm i ts-node-dev --save-dev
       - npm run build
       - npx prisma generate
 run:
-  command: ts-node-dev dist/QBDbin/run.ts
+  command: npm start
   network:
     port: 8082
   env:
