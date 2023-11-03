@@ -57,6 +57,24 @@ class QbdRepository {
     }
   }
   
+  async updateCompanyName(username:any,companyName:any) {
+    try {
+      const data = await prisma.connections.updateMany({
+        where: {
+          tokenDetails: {
+            contains:username
+          },
+        },
+        data: {
+          companyName: companyName,
+        },
+      });
+    } catch (error) {
+      // Handle any errors that occur during the database operation
+      console.error("Error updating updateCompanyName:", error.message);
+      throw error; // Re-throw the error for the calling code to handle
+    }
+  }
 }
 
 export default new QbdRepository();

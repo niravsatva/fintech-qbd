@@ -1,40 +1,52 @@
-import  http from 'http';
-import  fs from 'fs';
+import http from 'http';
+import fs from 'fs';
 const soap = require('soap');
 
-const server = http.createServer((req, res) => {
-    // console.log("in")
-    // console.log('req: ', req);
-    res.end('404: Not Found: ' + req.url);
-});
-
+// Define constants
 const port = process.env.QB_SOAP_PORT || 8000;
-
 const WSDL_FILENAME = '/qbws.wsdl';
 
-function buildWsdl(): string {
-    const wsdl = fs.readFileSync(__dirname + WSDL_FILENAME, 'utf8');
-    return wsdl;
-}
-
 class Server {
-    private wsdl: string;
-    private webService: any;
-    
+    wsdl: any;
+    webService: any;
     constructor() {
-        this.wsdl = buildWsdl();
+        this.wsdl = this.buildWsdl();
         this.webService = require('./web-service');
     }
 
-    public run(): void {
-        let soapServer: any;
-        server.listen(port);
-        soapServer = soap.listen(server, '/reuse-infra/qbd', this.webService.service, this.wsdl);
-        console.log('Quickbooks SOAP Server listening on port ' + port);
+    // Read the WSDL file and return its contents
+    buildWsdl() {
+        try {
+            // Read the WSDL file from the file system
+            return fs.readFileSync(__dirname + WSDL_FILENAME, 'utf8');
+        } catch (error) {
+            console.error('Error reading WSDL file:', error);
+            return null;
+        }
     }
 
-    public setQBXMLHandler(qbXMLHandler: any): void {
-        this.webService.setQBXMLHandler(qbXMLHandler.fetchRequests);
+    // Start the Quickbooks SOAP Server
+    run() {
+        // Create an HTTP server to handle requests
+        const server = http.createServer((req: any, res: any) => {
+            // Handle incoming requests and respond with a 404 message
+            res.end('404: Not Found: ' + req.url);
+        });
+
+        // Start the HTTP server and log the port it's listening on
+        server.listen(port, () => {
+            console.log('Quickbooks SOAP Server listening on port ' + port);
+        });
+
+        // Create a SOAP server that listens on the HTTP server
+        const soapServer = soap.listen(server, '/reuse-infra/qbd', this.webService.service, this.wsdl);
+        soapServer.log = () => {}; // Disable SOAP server logs
+    }
+
+    // Set the QBXML handler for the web service
+    setQBXMLHandler(qbXMLHandler: any) {
+        // Set the QBXML handler for the web service
+        this.webService.setQBXMLHandler(qbXMLHandler);
     }
 }
 
