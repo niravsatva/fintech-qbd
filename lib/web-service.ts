@@ -2,8 +2,7 @@ import semver from "semver";
 import uuid from "node-uuid";
 import qbdRepository from "../app/repositories/qbdRepository";
 import * as dotenv from "dotenv";
-
-
+import xml2js from "xml2js";
 dotenv.config();
 
 const MIN_SUPPORTED_VERSION: string = "1.0.0";
@@ -14,11 +13,14 @@ let webService: any;
 let counter: number = 0;
 let lastError: string = "";
 
-const companyFile: string = process.env.QB_COMPANY_FILE;
+const companyFile: any = process.env.QB_COMPANY_FILE || {};
 
 let requestQueue: any[] = [];
 
 let qbXMLHandler: any = {};
+
+// Declare strUserName at a scope accessible to both authenticate and sendRequestXML functions.
+let strUserName = null;
 
 webService = {
   QBWebConnectorSvc: {
@@ -29,12 +31,9 @@ webService = {
 webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.serverVersion = function (
   args: any,
   callback: any
-  ) {
-    console.log('args: ', args);
-  console.log('callback: ',  callback);
-
+) {
   const retVal: string = "0.2.0";
-  console.log("1 from web-service: ");
+  console.log("1 from web-service serverVersion: ");
 
   callback({
     serverVersionResult: { string: retVal },
@@ -45,7 +44,7 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.clientVersion = function (
   args: any,
   callback: any
 ) {
-  console.log("2 from web-service: ");
+  console.log("2 from web-service clientVersion: ");
 
   let retVal: string = "";
   const qbwcVersion: string =
@@ -68,24 +67,27 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.clientVersion = function (
 
 webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.authenticate =
   async function (args: any, callback: any) {
-    console.log("3 from web-service:");
-    const authReturn: any[] = [uuid.v1()];
+    console.log("3 from web-service authenticate:");
+    const authReturn: any = [];
+    authReturn[0] = uuid.v1();
+    // Set the value of strUserName
+    strUserName = args.strUserName;
 
-    const { strUserName, strPassword } = args;
+    const { strPassword } = args;
 
     const authenticatedUser = await qbdRepository.checkUserCredential(
       strUserName,
       strPassword
-      );
+    );
     if (
-      authenticatedUser!=null &&
-      args.strUserName.trim() === authenticatedUser.username &&
-      args.strPassword.trim() === authenticatedUser.password
+      authenticatedUser != null &&
+      strUserName.trim() === authenticatedUser.username &&
+      strPassword.trim() === authenticatedUser.password
     ) {
-      const updateConnection = async (id: any) => {
-        await qbdRepository.updateActiveConnection(id);
-      };
-      await updateConnection(authenticatedUser.username);
+     
+
+      // Check if qbXMLHandler responds to method.
+
       if (typeof qbXMLHandler.fetchRequests === "function") {
         qbXMLHandler.fetchRequests(function (err: any, requests: string[]) {
           console.log("err: ", err);
@@ -123,7 +125,30 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.sendRequestXML = function (
   args: any,
   callback: any
 ) {
-  console.log("4 from web-service: ");
+  console.log("4 from web-service sendRequestXML: ");
+
+  const { strHCPResponse } = args;
+
+  // Parse the QBXML response
+  xml2js.parseString(strHCPResponse, async (err: any, result: any) => {
+    if (err) {
+      console.error("Error parsing QBXML:", err);
+      return;
+    }
+
+    // Extract the company name from the parsed response
+    const companyName =
+      result.QBXML.QBXMLMsgsRs[0].CompanyQueryRs[0].CompanyRet[0]
+        .CompanyName[0];
+
+    if (!!companyName) {
+      const updateConnection = async (id: any) => {
+        await qbdRepository.updateActiveConnection(id);
+      };
+      await updateConnection(strUserName);
+      await qbdRepository.updateCompanyName(strUserName, companyName);
+    }
+  });
 
   let request: string = "";
   const totalRequests: number = requestQueue.length;
@@ -139,12 +164,11 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.sendRequestXML = function (
   callback({
     sendRequestXMLResult: { string: request },
   });
-  
 };
 
 webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.receiveResponseXML =
   function (args: any, callback: any) {
-    console.log("5 from web-service: ");
+    console.log("5 from web-service receiveResponseXML: ");
 
     const response: any = args.response;
     const hresult: any = args.hresult;
@@ -183,8 +207,8 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.receiveResponseXML =
 webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.connectionError = function (
   args: any,
   callback: any
-  ) {
-    console.log("6 from web-service: ");
+) {
+  console.log("6 from web-service connectionError: ");
 
   console.log(
     "QB CONNECTION ERROR: " + args.message + " (" + args.hresult + ")"
@@ -201,7 +225,7 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.getLastError = function (
   args: any,
   callback: any
 ) {
-  console.log("7 from web-service: ");
+  console.log("7 from web-service getLastError: ");
 
   const retVal: string = lastError;
 
@@ -214,7 +238,7 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.closeConnection = function (
   args: any,
   callback: any
 ) {
-  console.log("8 from web-service: ");
+  console.log("8 from web-service closeConnection: ");
 
   const retVal: string = "OK";
 
@@ -223,7 +247,7 @@ webService.QBWebConnectorSvc.QBWebConnectorSvcSoap.closeConnection = function (
   });
 };
 
-module.exports = {
+export = {
   service: webService,
 
   setQBXMLHandler: function (xmlHandler: any) {
